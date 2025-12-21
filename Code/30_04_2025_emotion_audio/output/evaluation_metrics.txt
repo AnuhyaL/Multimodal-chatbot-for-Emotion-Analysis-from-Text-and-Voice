@@ -1,0 +1,41 @@
+Accuracy: 0.8821
+Precision: 0.8955
+Recall: 0.8821
+F1 Score: 0.8793
+
+Per-Class Metrics:
+Angry:
+  Accuracy: 0.9875
+  Precision: 0.9405
+  Recall: 0.9875
+  F1 Score: 0.9634
+Disgust:
+  Accuracy: 0.6750
+  Precision: 0.9474
+  Recall: 0.6750
+  F1 Score: 0.7883
+Fear:
+  Accuracy: 0.9625
+  Precision: 0.9167
+  Recall: 0.9625
+  F1 Score: 0.9390
+Happy:
+  Accuracy: 0.9500
+  Precision: 0.9157
+  Recall: 0.9500
+  F1 Score: 0.9325
+Neutral:
+  Accuracy: 1.0000
+  Precision: 0.7767
+  Recall: 1.0000
+  F1 Score: 0.8743
+Pleasant_surprise:
+  Accuracy: 0.8875
+  Precision: 0.7717
+  Recall: 0.8875
+  F1 Score: 0.8256
+Sad:
+  Accuracy: 0.7125
+  Precision: 1.0000
+  Recall: 0.7125
+  F1 Score: 0.8321

@@ -1,0 +1,28 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.env/
+
+# Model files (DO NOT UPLOAD)
+*.h5
+*.pt
+*.pth
+*.onnx
+
+# Data & audio
+data/
+dataset/
+audio/
+recordings/
+*.wav
+*.mp3
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db

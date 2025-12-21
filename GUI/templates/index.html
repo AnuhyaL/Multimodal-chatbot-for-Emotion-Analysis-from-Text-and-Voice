@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection Chatbot</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --background-color: #f5f7fb;
+            --chat-bg: #ffffff;
+            --user-bubble: #e1f5fe;
+            --bot-bubble: #f0f2f5;
+            --joy-color: #4caf50;
+            --sadness-color: #2196f3;
+            --anger-color: #f44336;
+            --fear-color: #ff9800;
+            --love-color: #e91e63;
+            --other-color: #9e9e9e;
+            --happy-color: #4caf50;
+            --neutral-color: #9e9e9e;
+            --disgust-color: #9c27b0;
+            --pleasant-surprise-color: #00bcd4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .chat-container {
+            flex: 1;
+            background-color: var(--chat-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 15px;
+            background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header h2 {
+            margin-left: 10px;
+            font-size: 1.4rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-image: radial-gradient(circle at 10px 10px, rgba(74, 111, 165, 0.05) 2px, transparent 0), 
+                            radial-gradient(circle at 25px 25px, rgba(22, 96, 136, 0.05) 2px, transparent 0);
+            background-size: 30px 30px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            position: relative;
+            line-height: 1.5;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--user-bubble);
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background-color: var(--bot-bubble);
+            border-bottom-left-radius: 5px;
+        }
+
+        .emotion-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            font-size: 0.85rem;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .emotion-Joy, .emotion-Happy { background-color: var(--joy-color); }
+        .emotion-Sadness, .emotion-Sad { background-color: var(--sadness-color); }
+        .emotion-Anger, .emotion-Angry { background-color: var(--anger-color); }
+        .emotion-Fear { background-color: var(--fear-color); }
+        .emotion-Love { background-color: var(--love-color); }
+        .emotion-Neutral { background-color: var(--neutral-color); }
+        .emotion-Disgust { background-color: var(--disgust-color); }
+        .emotion-Pleasant_surprise { background-color: var(--pleasant-surprise-color); }
+        .emotion-Other { background-color: var(--other-color); }
+
+        .emotion-details {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #666;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .probability-bar {
+            height: 8px;
+            margin-top: 3px;
+            border-radius: 4px;
+            background-color: #e0e0e0;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .probability-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease-out;
+        }
+
+        .input-container {
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-tabs {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .input-tab {
+            padding: 8px 15px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .input-tab.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .input-content {
+            display: none;
+        }
+
+        .input-content.active {
+            display: block;
+        }
+
+        .chat-input {
+            display: flex;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .chat-input input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 1px 5px rgba(74, 111, 165, 0.3);
+        }
+
+        .chat-input button, .audio-controls button {
+            margin-left: 10px;
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input button:hover, .audio-controls button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .chat-input button:active, .audio-controls button:active {
+            transform: scale(0.98);
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #666;
+            padding: 10px 15px;
+        }
+
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            margin: 0 1px;
+            background-color: #bbb;
+            border-radius: 50%;
+            display: inline-block;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0% { transform: scale(0); }
+            50% { transform: scale(1); }
+            100% { transform: scale(0); }
+        }
+
+        .audio-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .audio-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .audio-buttons button {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .audio-buttons button i {
+            font-size: 1.2rem;
+        }
+
+        .audio-upload {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .audio-upload label {
+            flex: 1;
+            padding: 12px 15px;
+            background-color: #f0f2f5;
+            border: 1px dashed #ccc;
+            border-radius: 25px;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+
+        .audio-upload label:hover {
+            background-color: #e1e5eb;
+        }
+
+        .audio-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-name {
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .record-timer {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+            display: none;
+        }
+
+        .audio-visualizer {
+            height: 60px;
+            width: 100%;
+            background-color: #f0f2f5;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .visualizer-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .audio-player {
+            width: 100%;
+            margin-top: 10px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .message {
+                max-width: 90%;
+            }
+            .audio-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Emotion Detection Chatbot</h1>
+            <p>Chat with the bot and it will analyze your emotions from text or audio</p>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>EmotionBot</h2>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot-message">
+                    Hello! I'm EmotionBot. I can analyze your emotions based on what you type or say. How are you feeling today?
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <div class="input-tabs">
+                    <button class="input-tab active" data-tab="text">Text</button>
+                    <button class="input-tab" data-tab="audio">Audio</button>
+                </div>
+                
+                <div class="input-content active" id="text-input">
+                    <div class="chat-input">
+                        <input type="text" id="user-input" placeholder="Type your message here..." autocomplete="off">
+                        <button id="send-button">Send</button>
+                    </div>
+                </div>
+                
+                <div class="input-content" id="audio-input">
+                    <div class="audio-visualizer">
+                        <canvas id="visualizer" class="visualizer-canvas"></canvas>
+                    </div>
+                    
+                    <div class="record-timer" id="record-timer">00:00</div>
+                    
+                    <div class="audio-upload">
+                        <label for="audio-file">
+                            <i class="fas fa-file-audio"></i> Choose an audio file or drag it here
+                            <div class="file-name" id="file-name"></div>
+                        </label>
+                        <input type="file" id="audio-file" accept="audio/*">
+                    </div>
+                    
+                    <audio id="audio-player" class="audio-player" controls></audio>
+                    
+                    <div class="audio-controls">
+                        <div class="audio-buttons">
+                            <button id="record-button">
+                                <i class="fas fa-microphone"></i> Record
+                            </button>
+                            <button id="stop-button" disabled>
+                                <i class="fas fa-stop"></i> Stop
+                            </button>
+                            <button id="analyze-button" disabled>
+                                <i class="fas fa-chart-bar"></i> Analyze Emotion
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const inputTabs = document.querySelectorAll('.input-tab');
+            const inputContents = document.querySelectorAll('.input-content');
+            const audioFile = document.getElementById('audio-file');
+            const fileName = document.getElementById('file-name');
+            const audioPlayer = document.getElementById('audio-player');
+            const recordButton = document.getElementById('record-button');
+            const stopButton = document.getElementById('stop-button');
+            const analyzeButton = document.getElementById('analyze-button');
+            const visualizer = document.getElementById('visualizer');
+            const visualizerContainer = document.querySelector('.audio-visualizer');
+            const recordTimer = document.getElementById('record-timer');
+            
+            // Audio recording variables
+            let mediaRecorder;
+            let audioChunks = [];
+            let audioBlob = null;
+            let recordingStartTime;
+            let timerInterval;
+            let audioContext;
+            let analyser;
+            let canvasContext = visualizer.getContext('2d');
+            let animationFrame;
+            
+            // Initialize tabs
+            inputTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    inputTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Update active content
+                    inputContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === tabId + '-input') {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            // Function to add a message to the chat
+            function addMessage(text, sender, emotionData = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                
+                if (sender === 'user') {
+                    messageDiv.classList.add('user-message');
+                    messageDiv.textContent = text;
+                } else {
+                    messageDiv.classList.add('bot-message');
+                    
+                    if (emotionData) {
+                        const emotion = emotionData.predicted_emotion || emotionData.predicted_label;
+                        const probabilities = emotionData.probabilities;
+                        
+                        // Create emotion label
+                        const emotionLabel = document.createElement('div');
+                        emotionLabel.classList.add('emotion-label', `emotion-${emotion}`);
+                        emotionLabel.textContent = emotion;
+                        messageDiv.appendChild(emotionLabel);
+                        
+                        // Add message text
+                        const messageText = document.createElement('div');
+                        messageText.textContent = text;
+                        messageDiv.appendChild(messageText);
+                        
+                        // Add emotion details
+                        const emotionDetails = document.createElement('div');
+                        emotionDetails.classList.add('emotion-details');
+                        
+                        // Create probability bars for each emotion
+                        for (const [emotion, probability] of Object.entries(probabilities)) {
+                            const emotionBar = document.createElement('div');
+                            emotionBar.style.marginBottom = '8px';
+                            
+                            const emotionName = document.createElement('div');
+                            emotionName.textContent = `${emotion}: ${(probability * 100).toFixed(1)}%`;
+                            emotionBar.appendChild(emotionName);
+                            
+                            const probabilityBar = document.createElement('div');
+                            probabilityBar.classList.add('probability-bar');
+                            
+                            const probabilityFill = document.createElement('div');
+                            probabilityFill.classList.add('probability-fill');
+                            
+                            // Set color based on emotion
+                            let color = 'var(--other-color)';
+                            switch(emotion) {
+                                case 'Joy': 
+                                case 'Happy': 
+                                    color = 'var(--joy-color)'; 
+                                    break;
+                                case 'Sadness': 
+                                case 'Sad': 
+                                    color = 'var(--sadness-color)'; 
+                                    break;
+                                case 'Anger': 
+                                case 'Angry': 
+                                    color = 'var(--anger-color)'; 
+                                    break;
+                                case 'Fear': 
+                                    color = 'var(--fear-color)'; 
+                                    break;
+                                case 'Love': 
+                                    color = 'var(--love-color)'; 
+                                    break;
+                                case 'Neutral': 
+                                    color = 'var(--neutral-color)'; 
+                                    break;
+                                case 'Disgust': 
+                                    color = 'var(--disgust-color)'; 
+                                    break;
+                                case 'Pleasant_surprise': 
+                                    color = 'var(--pleasant-surprise-color)'; 
+                                    break;
+                            }
+                            
+                            probabilityFill.style.backgroundColor = color;
+                            probabilityFill.style.width = '0%';
+                            
+                            probabilityBar.appendChild(probabilityFill);
+                            emotionBar.appendChild(probabilityBar);
+                            emotionDetails.appendChild(emotionBar);
+                            
+                            // Animate the probability bar after a short delay
+                            setTimeout(() => {
+                                probabilityFill.style.width = `${probability * 100}%`;
+                            }, 100);
+                        }
+                        
+                        messageDiv.appendChild(emotionDetails);
+                    } else {
+                        messageDiv.textContent = text;
+                    }
+                }
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Function to show typing indicator
+            function showTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.classList.add('message', 'bot-message', 'typing-indicator');
+                typingDiv.id = 'typing-indicator';
+                
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('span');
+                    typingDiv.appendChild(dot);
+                }
+                
+                chatMessages.appendChild(typingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Function to remove typing indicator
+            function removeTypingIndicator() {
+                const typingIndicator = document.getElementById('typing-indicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+            
+            // Function to send text message to backend and get response
+            async function sendTextMessage(text) {
+                try {
+                    showTypingIndicator();
+                    
+                    const response = await fetch('/predict', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ text })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to get response');
+                    }
+                    
+                    const data = await response.json();
+                    removeTypingIndicator();
+                    
+                    // Generate response based on emotion
+                    let botResponse = '';
+                    const emotion = data.predicted_emotion;
+                    
+                    switch(emotion) {
+                        case 'Joy':
+                            botResponse = "I sense joy in your message! That's wonderful to hear. Would you like to share more about what's making you happy?";
+                            break;
+                        case 'Sadness':
+                            botResponse = "I'm detecting sadness in your message. I'm here to listen if you want to talk more about what's troubling you.";
+                            break;
+                        case 'Anger':
+                            botResponse = "I notice you seem angry. It's okay to feel frustrated sometimes. Would you like to talk more about what's bothering you?";
+                            break;
+                        case 'Fear':
+                            botResponse = "I sense some fear or anxiety in your message. Remember that it's okay to feel this way, and talking about it can help.";
+                            break;
+                        case 'Love':
+                            botResponse = "I'm detecting feelings of love or affection in your message. That's a beautiful emotion to experience!";
+                            break;
+                        default:
+                            botResponse = "Thank you for sharing. Would you like to tell me more about how you're feeling?";
+                    }
+                    
+                    // Add bot response with emotion data
+                    addMessage(botResponse, 'bot', data);
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    removeTypingIndicator();
+                    addMessage("Sorry, I couldn't process your message. Please try again.", 'bot');
+                }
+            }
+            
+            // Function to send audio to backend and get response
+            async function sendAudioMessage(audioBlob) {
+                try {
+                    showTypingIndicator();
+                    
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob);
+                    
+                    const response = await fetch('/predict_audio', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to get response');
+                    }
+                    
+                    const data = await response.json();
+                    removeTypingIndicator();
+                    
+                    // Generate response based on emotion
+                    let botResponse = '';
+                    const emotion = data.predicted_label;
+                    
+                    switch(emotion) {
+                        case 'Happy':
+                            botResponse = "I can hear happiness in your voice! It's great to hear you're in good spirits.";
+                            break;
+                        case 'Sad':
+                            botResponse = "I'm detecting sadness in your voice. I'm here if you want to talk about what's making you feel down.";
+                            break;
+                        case 'Angry':
+                            botResponse = "I notice some anger in your voice. It's okay to express your frustration, and I'm here to listen.";
+                            break;
+                        case 'Fear':
+                            botResponse = "I sense some fear or anxiety in your voice. Remember that it's okay to feel this way, and talking about it can help.";
+                            break;
+                        case 'Neutral':
+                            botResponse = "Your voice sounds neutral. How are you feeling right now?";
+                            break;
+                        case 'Disgust':
+                            botResponse = "I'm detecting some disgust in your voice. Would you like to talk about what's bothering you?";
+                            break;
+                        case 'Pleasant_surprise':
+                            botResponse = "You sound pleasantly surprised! What's made your day better?";
+                            break;
+                        default:
+                            botResponse = "Thank you for sharing your voice message. Would you like to tell me more about how you're feeling?";
+                    }
+                    
+                    // Add bot response with emotion data
+                    addMessage(botResponse, 'bot', data);
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    removeTypingIndicator();
+                    addMessage("Sorry, I couldn't process your audio. Please try again.", 'bot');
+                }
+            }
+            
+            // Event listener for send button
+            sendButton.addEventListener('click', function() {
+                const text = userInput.value.trim();
+                if (text) {
+                    addMessage(text, 'user');
+                    userInput.value = '';
+                    sendTextMessage(text);
+                }
+            });
+            
+            // Event listener for Enter key
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const text = userInput.value.trim();
+                    if (text) {
+                        addMessage(text, 'user');
+                        userInput.value = '';
+                        sendTextMessage(text);
+                    }
+                }
+            });
+            
+            // Audio file upload handling
+            audioFile.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    fileName.textContent = file.name;
+                    
+                    // Create object URL for the audio file
+                    const audioURL = URL.createObjectURL(file);
+                    audioPlayer.src = audioURL;
+                    audioPlayer.style.display = 'block';
+                    
+                    // Store the file for later analysis
+                    audioBlob = file;
+                    analyzeButton.disabled = false;
+                }
+            });
+            
+            // Audio recording functions
+            function startRecording() {
+                // Reset previous recording
+                audioChunks = [];
+                audioBlob = null;
+                
+                // Get user media
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        // Setup audio context for visualization
+                        setupAudioContext(stream);
+                        
+                        // Setup media recorder
+                        mediaRecorder = new MediaRecorder(stream);
+                        
+                        mediaRecorder.ondataavailable = event => {
+                            audioChunks.push(event.data);
+                        };
+                        
+                        mediaRecorder.onstop = () => {
+                            // Create blob from recorded chunks
+                            audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                            
+                            // Create URL for audio playback
+                            const audioURL = URL.createObjectURL(audioBlob);
+                            audioPlayer.src = audioURL;
+                            audioPlayer.style.display = 'block';
+                            
+                            // Enable analyze button
+                            analyzeButton.disabled = false;
+                            
+                            // Stop the visualization
+                            stopVisualization();
+                        };
+                        
+                        // Start recording
+                        mediaRecorder.start();
+                        recordingStartTime = Date.now();
+                        startTimer();
+                        
+                        // Update UI
+                        recordButton.disabled = true;
+                        stopButton.disabled = false;
+                        visualizerContainer.style.display = 'block';
+                        recordTimer.style.display = 'block';
+                        
+                        // Add a message to indicate recording
+                        addMessage("Recording audio...", 'user');
+                    })
+                    .catch(error => {
+                        console.error('Error accessing microphone:', error);
+                        addMessage("Could not access your microphone. Please check your permissions.", 'bot');
+                    });
+            }
+            
+            function stopRecording() {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    
+                    // Update UI
+                    recordButton.disabled = false;
+                    stopButton.disabled = true;
+                    stopTimer();
+                    
+                    // Add a message to indicate recording stopped
+                    addMessage("Audio recording complete.", 'user');
+                }
+            }
+            
+            function setupAudioContext(stream) {
+                // Create audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                
+                // Connect the stream to the analyser
+                const source = audioContext.createMediaStreamSource(stream);
+                source.connect(analyser);
+                
+                // Configure analyser
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                // Set canvas size
+                visualizer.width = visualizer.clientWidth;
+                visualizer.height = visualizer.clientHeight;
+                
+                // Start visualization
+                visualize();
+            }
+            
+            function visualize() {
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                canvasContext.clearRect(0, 0, visualizer.width, visualizer.height);
+                
+                function draw() {
+                    animationFrame = requestAnimationFrame(draw);
+                    
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    canvasContext.fillStyle = 'rgb(240, 242, 245)';
+                    canvasContext.fillRect(0, 0, visualizer.width, visualizer.height);
+                    
+                    const barWidth = (visualizer.width / bufferLength) * 2.5;
+                    let barHeight;
+                    let x = 0;
+                    
+                    for (let i = 0; i < bufferLength; i++) {
+                        barHeight = dataArray[i] / 2;
+                        
+                        canvasContext.fillStyle = `rgb(${74 + i}, ${111 + i}, ${165 - i})`;
+                        canvasContext.fillRect(x, visualizer.height - barHeight, barWidth, barHeight);
+                        
+                        x += barWidth + 1;
+                    }
+                }
+                
+                draw();
+            }
+            
+            function stopVisualization() {
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                }
+                
+                // Clear canvas
+                canvasContext.clearRect(0, 0, visualizer.width, visualizer.height);
+            }
+            
+            function startTimer() {
+                let seconds = 0;
+                recordTimer.textContent = '00:00';
+                
+                timerInterval = setInterval(() => {
+                    seconds++;
+                    const minutes = Math.floor(seconds / 60);
+                    const remainingSeconds = seconds % 60;
+                    recordTimer.textContent = `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+                    
+                    // Auto-stop after 2 minutes
+                    if (seconds >= 120) {
+                        stopRecording();
+                    }
+                }, 1000);
+            }
+            
+            function stopTimer() {
+                clearInterval(timerInterval);
+            }
+            
+            // Event listeners for audio controls
+            recordButton.addEventListener('click', startRecording);
+            stopButton.addEventListener('click', stopRecording);
+            
+            analyzeButton.addEventListener('click', () => {
+                if (audioBlob) {
+                    sendAudioMessage(audioBlob);
+                    analyzeButton.disabled = true;
+                }
+            });
+            
+            // Focus input field on load
+            userInput.focus();
+        });
+    </script>
+</body>
+</html>
