@@ -1,4 +1,4 @@
-# 🤖 Multimodal Chatbot for Emotion Analysis from Text and Voice
+#  Multimodal Chatbot for Emotion Analysis from Text and Voice
 
 A multimodal AI application that analyzes **human emotions from both text and voice input** using deep learning. The project combines a fine-tuned **BERT-based text emotion classifier** with an **LSTM-based speech emotion recognition model**, exposed through a Flask web application.
 
@@ -6,7 +6,7 @@ The system demonstrates how different modalities can be processed independently 
 
 ---
 
-## 📌 Project Overview
+##  Project Overview
 
 Human emotions can be expressed through multiple communication channels. Text can reveal emotional meaning through language, while voice contains additional emotional cues through acoustic characteristics.
 
